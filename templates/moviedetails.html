@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ movieD.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='moviedetails.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="movie-container">
+            <div class="movie-image">
+                <!-- Movie image -->
+                <img src="{{ movieD.address }}" alt="{{ movieD.name }}">
+            </div>
+            <div class="movie-info">
+                <!-- Movie details -->
+                <h1>{{ movieD.name }}</h1>
+                <p><strong>Tag:</strong> {{ movieD.tag }}</p>
+                <p><strong>Plot:</strong> {{ movieD.plot }}</p>
+                <p><strong>Rating:</strong> {{ movieD.rating }}</p>
+                <p><strong>Release Date:</strong> {{ movieD.release_date }}</p>
+                <p><strong>Runtime:</strong> {{ movieD.runtime }} minutes</p>
+            </div>
+        </div>
+        <!-- Comment Form -->
+        <div class="comment-section">
+            <h2>Leave a Comment</h2>
+            <form action="/submit_comment" method="POST">
+                <textarea name="comment" required placeholder="Your comment here..."></textarea>
+                <button type="submit">Submit Comment</button>
+            </form>
+        </div>
+        
+    </div>
+</body>
+</html>

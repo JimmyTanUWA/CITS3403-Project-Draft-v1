@@ -1,0 +1,63 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const session = require('express-session');
+const sqlite3 = require('sqlite3').verbose();
+
+// Setup SQLite
+const db = new sqlite3.Database(':memory:'); // In-memory database for simplicity
+
+// Create tables
+db.serialize(() => {
+    db.run("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)");
+    db.run("CREATE TABLE comments (id INTEGER PRIMARY KEY, userId INTEGER, comment TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)");
+    db.run("INSERT INTO users (username, password) VALUES ('testuser', 'password123')"); // Test user
+});
+
+const app = express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({
+    secret: 'secret-key',
+    resave: false,
+    saveUninitialized: true
+}));
+
+// Endpoint to check if user is logged in
+app.get('/check-login', (req, res) => {
+    if (req.session.userId) {
+        res.json({ loggedIn: true });
+    } else {
+        res.json({ loggedIn: false });
+    }
+});
+
+// Endpoint to handle login
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    db.get("SELECT id FROM users WHERE username = ? AND password = ?", [username, password], (err, row) => {
+        if (err || !row) {
+            return res.json({ success: false });
+        }
+        req.session.userId = row.id;
+        res.json({ success: true });
+    });
+});
+
+// Endpoint to handle comment submission
+app.post('/submit-comment', (req, res) => {
+    if (!req.session.userId) {
+        return res.json({ success: false, message: 'Not logged in' });
+    }
+    const comment = req.body.comment;
+    const userId = req.session.userId;
+    db.run("INSERT INTO comments (userId, comment) VALUES (?, ?)", [userId, comment], function(err) {
+        if (err) {
+            return res.json({ success: false, message: 'Error saving comment' });
+        }
+        res.json({ success: true, message: 'Comment submitted successfully' });
+    });
+});
+
+app.listen(3000, () => {
+    console.log('Server running on port 3000');
+});
